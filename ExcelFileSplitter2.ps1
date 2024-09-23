@@ -1,8 +1,8 @@
 # PowerShell script to split Excel file into multiple files with max 10,000 rows and retain header and formatting
 
 # Input and output paths
-#$inputFile = "C:\path\to\your\input.xlsx"
-#$outputDirectory = "C:\path\to\output\directory"
+$inputFile = "C:\path\to\your\input.xlsx"
+$outputDirectory = "C:\path\to\output\directory"
 
 $maxRowsPerFile = 10000
 
