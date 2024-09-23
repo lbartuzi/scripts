@@ -1,8 +1,9 @@
-# PowerShell script to split Excel file into multiple files with max 10,000 rows and retain formatting
+# PowerShell script to split Excel file into multiple files with max 10,000 rows and retain header and formatting
 
 # Input and output paths
-$inputFile = "C:\path\to\your\input.xlsx"
-$outputDirectory = "C:\path\to\output\directory"
+#$inputFile = "C:\path\to\your\input.xlsx"
+#$outputDirectory = "C:\path\to\output\directory"
+
 $maxRowsPerFile = 10000
 
 # Create Excel Application object
@@ -20,26 +21,35 @@ try {
     $totalColumns = $worksheet.UsedRange.Columns.Count
 
     # Calculate the number of files needed
-    $fileCount = [math]::Ceiling($totalRows / $maxRowsPerFile)
+    $fileCount = [math]::Ceiling(($totalRows - 1) / $maxRowsPerFile)  # Subtract 1 to account for the header row
+
+    # Copy the header (first row) from the original worksheet
+    $headerRange = $worksheet.Range("A1").Resize(1, $totalColumns)
 
     for ($i = 1; $i -le $fileCount; $i++) {
         # Create a new workbook for each split
         $newWorkbook = $excel.Workbooks.Add()
         $newWorksheet = $newWorkbook.Worksheets.Item(1)
 
-        # Calculate the row range for the current split
-        $startRow = (($i - 1) * $maxRowsPerFile) + 1
-        $endRow = [math]::Min($i * $maxRowsPerFile, $totalRows)
+        # Copy the header into the new worksheet
+        $headerRange.Copy()
+        $newWorksheet.Range("A1").PasteSpecial(-4163)  # Paste the header with formatting
 
-        # Number of rows to copy
+        # Calculate the row range for the current split (excluding the header row)
+        $startRow = (($i - 1) * $maxRowsPerFile) + 2  # Start from the 2nd row in original (since row 1 is the header)
+        $endRow = [math]::Min($i * $maxRowsPerFile + 1, $totalRows)
+
+        # Number of rows to copy (excluding header row)
         $rowsToCopy = $endRow - $startRow + 1
 
-        # Copy the specified range from the original worksheet
-        $sourceRange = $worksheet.Range("A$startRow").Resize($rowsToCopy, $totalColumns)
-        $sourceRange.Copy()
+        if ($rowsToCopy -gt 0) {
+            # Copy the data range from the original worksheet
+            $sourceRange = $worksheet.Range("A$startRow").Resize($rowsToCopy, $totalColumns)
+            $sourceRange.Copy()
 
-        # Paste into the new worksheet
-        $newWorksheet.Range("A1").PasteSpecial(-4163)  # xlPasteAllUsingSourceTheme
+            # Paste into the new worksheet, starting at row 2 (since row 1 is the header)
+            $newWorksheet.Range("A2").PasteSpecial(-4163)  # xlPasteAllUsingSourceTheme
+        }
 
         # Save the new workbook
         $outputFile = Join-Path $outputDirectory ("SplitFile_" + $i + ".xlsx")
