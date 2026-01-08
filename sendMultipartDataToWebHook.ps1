@@ -1,8 +1,27 @@
 # ===============================
+# Selection of the most recent file from the folder
+# ===============================
+
+$folder  = "C:\ztemp\rep"
+$pattern = "MYfiletobesent_*.csv"
+
+$latest = Get-ChildItem -Path $folder -Filter $pattern -File |
+          Sort-Object LastWriteTime -Descending |
+          Select-Object -First 1
+
+if (-not $latest) { throw "No file found matching $pattern in $folder" }
+
+$latest.FullName
+
+
+# ===============================
 # CONFIG
 # ===============================
 $uri       = "https://webhook.end.point"
 $jwtSecret = "JWT secret"
+
+$filePath  = $latest.FullName #"C:\Users\BartuziLu01a\LPRReport_min7days.csv"
+
 
 $filePath  = "path to file"
 $to        = "te e-mail address"
